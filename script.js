@@ -1,58 +1,105 @@
-const dynamicText = document.querySelector('.teksdiam span');
-const words = ['Web Developer', 'Mobile Developer', 'Illustrator'];
-
-let wordIndex = 0;
-let charIndex = 0;
-let isDeleting = false;
-const typeEffect = () => {
-  const currentWord = words[wordIndex];
-  const currentChar = currentWord.substring(0, charIndex);
-  dynamicText.textContent = currentChar;
-  dynamicText.classList.add('stop-blinking');
-  if (!isDeleting && charIndex < currentWord.length) {
-    // If condition is true, type the next character
-    charIndex++;
-    setTimeout(typeEffect, 200);
-  } else if (isDeleting && charIndex > 0) {
-    // If condition is true, remove the previous character
-    charIndex--;
-    setTimeout(typeEffect, 100);
-  } else {
-    // If word is deleted then switch to the next word
-    isDeleting = !isDeleting;
-    dynamicText.classList.remove('stop-blinking');
-    wordIndex = !isDeleting ? (wordIndex + 1) % words.length : wordIndex;
-    setTimeout(typeEffect, 1200);
+document.addEventListener('DOMContentLoaded', () => {
+  // --- Theme Toggler ---
+  const themeToggle = document.getElementById('theme-toggle');
+  const htmlElement = document.documentElement;
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme) {
+    htmlElement.setAttribute('data-theme', savedTheme);
+    themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
   }
-};
-typeEffect();
+  themeToggle.addEventListener('click', () => {
+    const newTheme = htmlElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    htmlElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    themeToggle.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+  });
 
-function tambahkanBreak() {
-  const h3Elem = document.querySelector('.teksdiam');
-  const spanElem = h3Elem.querySelector('span');
+  // --- Typing Effect ---
+  const dynamicText = document.querySelector('.dynamic-text-heading span');
+  if (dynamicText) {
+    const words = ['Web Developer', 'Mobile Developer', 'Illustrator'];
+    let wordIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
 
-  if (window.innerWidth <= 991.98) {
-    const brElem = document.createElement('br');
-    h3Elem.insertBefore(brElem, spanElem);
+    const typeEffect = () => {
+      const currentWord = words[wordIndex];
+      const currentChar = currentWord.substring(0, charIndex);
+      dynamicText.textContent = currentChar;
+      dynamicText.classList.add('stop-blinking');
+
+      if (!isDeleting && charIndex < currentWord.length) {
+        charIndex++;
+        setTimeout(typeEffect, 150);
+      } else if (isDeleting && charIndex > 0) {
+        charIndex--;
+        setTimeout(typeEffect, 100);
+      } else {
+        isDeleting = !isDeleting;
+        dynamicText.classList.remove('stop-blinking');
+        if (!isDeleting) {
+          wordIndex = (wordIndex + 1) % words.length;
+        }
+        setTimeout(typeEffect, 1200);
+      }
+    };
+    typeEffect();
   }
-}
 
-// Panggil fungsi setelah halaman dimuat
-window.onload = tambahkanBreak;
+  // --- Scroll Animation Observer ---
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('show');
+        }
+      });
+    },
+    { threshold: 0.1 }
+  );
+  const animatedElements = document.querySelectorAll('.animated-item, .animated-card');
+  animatedElements.forEach((el) => observer.observe(el));
 
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach((entry) => {
-    console.log(entry);
-    if (entry.isIntersecting) {
-      entry.target.classList.add('show');
-    } else {
-      entry.target.classList.remove('show');
-    }
+  // --- Filter Logic ---
+  function setupFilters(filterContainerId, cardContainerSelector) {
+    const filterContainer = document.getElementById(filterContainerId);
+    if (!filterContainer) return;
+
+    const filterButtons = filterContainer.querySelectorAll('.filter-btn');
+    const cards = document.querySelectorAll(cardContainerSelector);
+
+    filterButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        filterContainer.querySelector('.active').classList.remove('active');
+        button.classList.add('active');
+        const filter = button.getAttribute('data-filter');
+        cards.forEach((card) => {
+          if (filter === 'all' || card.getAttribute('data-category') === filter) {
+            card.classList.remove('hide');
+          } else {
+            card.classList.add('hide');
+          }
+        });
+      });
+    });
+  }
+  setupFilters('experience-filters', '#exp .animated-card');
+  setupFilters('illustration-filters', '#ilus .animated-card');
+
+  // --- 3D Card Tilt Effect ---
+  document.querySelectorAll('.experience-card, .illustration-card, .project-item').forEach((card) => {
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      const rotateX = ((y - centerY) / centerY) * -7;
+      const rotateY = ((x - centerX) / centerX) * 7;
+      card.style.transform = `perspective(1000px) scale(1.05) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = 'perspective(1000px) scale(1) rotateX(0) rotateY(0)';
+    });
   });
 });
-
-const hiddenElements = document.querySelectorAll('.hiddenleft');
-hiddenElements.forEach((el) => observer.observe(el));
-
-const hiddenElementscenter = document.querySelectorAll('.hiddencenter');
-hiddenElementscenter.forEach((el) => observer.observe(el));
